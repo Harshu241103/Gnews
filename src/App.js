@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import NavigationBar from './components/NavigationBar';
 import Footer from './components/Footer';
 
@@ -33,7 +33,7 @@ import GujaratiHealthPage from './pages/GujaratiHealthPage';
 function App() {
   return (
     <div className="App">
-      <HashRouter>
+      <BrowserRouter>
         <NavigationBar />
 
         <Routes>
@@ -69,7 +69,7 @@ function App() {
         </Routes>
 
         <Footer />
-      </HashRouter>
+      </BrowserRouter>
     </div>
   );
 }
