@@ -2,9 +2,20 @@ import { API_KEYS } from '../config';
 import { getMockNews } from '../data/mockNews';
 
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes cache duration
+const CACHE_VERSION = 'v2'; // Bump this to invalidate all old caches
+
+// Clear any old cache entries from previous versions
+const clearOldCache = () => {
+  try {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('gnews_cache_') && !k.includes(`_${CACHE_VERSION}_`))
+      .forEach(k => localStorage.removeItem(k));
+  } catch (e) { /* ignore */ }
+};
+clearOldCache();
 
 export const fetchNewsWithCache = async (category = 'general', lang = 'en') => {
-  const cacheKey = `gnews_cache_${lang}_${category}`;
+  const cacheKey = `gnews_cache_${CACHE_VERSION}_${lang}_${category}`;
 
   // 1. Check local storage cache
   try {
