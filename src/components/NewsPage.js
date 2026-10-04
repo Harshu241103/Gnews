@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Row, Container, Card, Badge, Alert, Spinner } from 'react-bootstrap';
 import { fetchNewsWithCache } from '../utils/fetchNews';
+import { getMockNews } from '../data/mockNews';
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop";
 
@@ -12,16 +13,27 @@ function NewsPage({ title, category, lang }) {
 
   const apiGet = async () => {
     setLoading(true);
-    const result = await fetchNewsWithCache(category, lang);
-    setData(result.articles || []);
-    setIsQuotaExceeded(result.isQuotaExceeded);
-    setIsFromCache(result.isFromCache);
-    setLoading(false);
+    try {
+      const result = await fetchNewsWithCache(category, lang);
+      if (result && Array.isArray(result.articles) && result.articles.length > 0) {
+        setData(result.articles);
+        setIsQuotaExceeded(result.isQuotaExceeded || false);
+        setIsFromCache(result.isFromCache || false);
+      } else {
+        setData(getMockNews(category, lang));
+        setIsQuotaExceeded(true);
+      }
+    } catch (err) {
+      console.error("Failed to fetch news gracefully:", err);
+      setData(getMockNews(category, lang));
+      setIsQuotaExceeded(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     apiGet();
-    // Refresh cache periodically every 30 mins (1,800,000 ms) instead of 1000s
     const interval = setInterval(() => {
       apiGet();
     }, 1800000);
@@ -42,7 +54,7 @@ function NewsPage({ title, category, lang }) {
       {isQuotaExceeded && (
         <Alert variant="warning" className="d-flex align-items-center justify-content-between shadow-sm">
           <div>
-            <strong>⚠️ Daily API Quota Reached:</strong> The free GNews API 100 requests/day limit has been reached. Showing cached & fallback news so your site stays live and readable.
+            <strong>⚠️ Daily API Limit / Network Notice:</strong> Live GNews API is currently unavailable or quota reached (100 reqs/day). Showing cached & fallback news so your site stays active.
           </div>
           <Badge bg="dark" className="ms-2">Quota Guard Active</Badge>
         </Alert>
@@ -51,7 +63,7 @@ function NewsPage({ title, category, lang }) {
       {loading ? (
         <div className="text-center py-5">
           <Spinner animation="border" variant="primary" role="status" />
-          <p className="mt-2 text-muted">Fetching latest news...</p>
+          <p className="mt-2 text-muted">Loading news...</p>
         </div>
       ) : (
         <Row xs={1} md={3} className="g-4">
